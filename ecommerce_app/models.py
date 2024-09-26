@@ -137,7 +137,7 @@ class Stock_product(models.Model):
     sp_category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     sp_brand = models.ForeignKey(Brand, on_delete=models.CASCADE, null=True)
     sp_sub_category = models.CharField(max_length=100, null=True, blank=True)
-    sp_stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    sp_stock = models.ForeignKey(Stock, on_delete=models.CASCADE, related_name='stock_product_data')
     
     def __str__(self):
         return f"{self.sp_product_name} - {self.sp_product_code}"
@@ -151,7 +151,7 @@ class stock_details(models.Model):
     sd_quantity = models.IntegerField()
     sd_size = models.ForeignKey(Size, on_delete=models.CASCADE, null=True)
     sd_color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True)
-    sd_product = models.ForeignKey(Stock_product, on_delete=models.CASCADE)
+    sd_product = models.ForeignKey(Stock_product, on_delete=models.CASCADE, related_name='stock_details_data')
     
     def __str__(self):
         return f"{self.sd_product.sp_product_name} - {self.sd_price} - {self.sd_quantity}"
@@ -181,7 +181,7 @@ class stock_manage_details(models.Model):
     smd_quantity = models.IntegerField()
     smd_size = models.ForeignKey(Size, on_delete=models.CASCADE, null=True)
     smd_color = models.ForeignKey(Color, on_delete=models.CASCADE, null=True)
-    smd_product = models.ForeignKey(Stock_management, on_delete=models.CASCADE)
+    smd_product = models.ForeignKey(Stock_management, on_delete=models.CASCADE, related_name='stock_management_data')
 
     def __str__(self):
         return f"{self.smd_product.sm_product_name} - {self.smd_price} - {self.smd_quantity}"
