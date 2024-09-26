@@ -1752,6 +1752,28 @@ def insert_stock_details_function(request):
     pass
 
 
+@api_view(['DELETE'])
+def delete_stock_details_function(request):
+    if request.GET.get('pk'):
+        try:
+            stock_det = get_object_or_404(Stock, pk=request.GET['pk'])
+            stock_det.delete()
+            return Response({
+                "status": True,
+                "message": "Offer Details has been deleted successfully"
+            })
+        except Exception as e:
+            return Response({
+                "status": False,
+                "message": str(e)
+            }) 
+    else:
+        return Response({
+            'status': False,
+            'message': 'Give pk for Delete'
+        }) 
+
+
 @api_view(['GET']) 
 def show_stock_management_details_function(request):
     stock_management = Stock_management.objects.prefetch_related('stock_management_data').all()
@@ -1784,3 +1806,8 @@ def show_stock_management_details_function(request):
     context = {'data':stock_management_list}  
     return Response(context)
     
+
+@api_view(['GET', 'POST'])    
+def insert_stock_management_details_function(request):
+    pass
+

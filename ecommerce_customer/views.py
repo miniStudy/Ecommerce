@@ -353,55 +353,36 @@ def customer_delete_wishlist_function(request):
 
 @api_view(['GET'])
 def show_products_function(request):
-    product_data = Product.objects.prefetch_related('product_size', 'product_color', 'product_ava', 'product_reviews').all().annotate(
-        average_rating=Avg('product_reviews__review_rating'),
-        average_rating_count=Count('product_reviews__review_rating'))
-    serializer = Product_show_api(product_data, many = True)
-    context = {
-        'data':serializer.data,
-        'status': True
-    }
+    product_data = Product.objects.prefetch_related('product_size', 'product_color', 'product_ava','product_reviews','offer_product_data').annotate(
+        average_rating=Avg('product_reviews__review_rating'),total_reviews=Count('product_reviews__review_rating')
+    ).all()
 
     if request.GET.get('get_color'):
         get_color = request.GET.get('get_color')
-        product_data = Product.objects.prefetch_related('product_size', 'product_color', 'product_ava').filter(product_color__color_id = get_color)
-        serializer = Product_show_api(product_data, many = True)
-        context.update({'data':serializer.data, 'status': True})
+        product_data = product_data.filter(product_color__color_id=get_color)
 
     if request.GET.get('get_cat'):
         get_cat = request.GET.get('get_cat')
-        product_data = Product.objects.prefetch_related('product_size', 'product_color', 'product_ava').filter(product_cat__category_id = get_cat)
-        serializer = Product_show_api(product_data, many = True)
-        context.update({'data':serializer.data, 'status': True})
-
+        product_data = product_data.filter(product_cat__category_id=get_cat)
     
     if request.GET.get('get_brand'):
         get_brand = request.GET.get('get_brand')
-        product_data = Product.objects.prefetch_related('product_size', 'product_color', 'product_ava').filter(product_brand__brand_id = get_brand)
-        serializer = Product_show_api(product_data, many = True)
-        context.update({'data':serializer.data, 'status': True})
-
+        product_data = product_data.filter(product_brand__brand_id=get_brand)
     
     if request.GET.get('get_size'):
         get_size = request.GET.get('get_size')
-        product_data = Product.objects.prefetch_related('product_size', 'product_color', 'product_ava').filter(product_size__size_id = get_size)
-        serializer = Product_show_api(product_data, many = True)
-        context.update({'data':serializer.data, 'status': True})
+        product_data = product_data.filter(product_size__size_id=get_size)
     
-    products_filter_az = Product.objects.all().order_by('product_name')
-    products_filter_za = Product.objects.all().order_by('-product_name')
 
     if request.GET.get('min_price') and request.GET.get('max_price'):
         min_price = request.GET.get('min_amount')
         max_price = request.GET.get('max_amount')
 
         product_data = Product.objects.filter(product_selling_price__gte=min_price, product_selling_price__lte=max_price).order_by('-product_selling_price')
-        serializer = Product_show_api(product_data, many = True)
-        context.update({'data':serializer.data, 'status': True})
 
     query = request.GET.get('searchhere', '')
     if query:
-        product_data = Product.objects.filter(
+        product_data = product_data.filter(
             Q(product_name__icontains=query) |
             Q(product_mrp__icontains=query) |
             Q(product_selling_price__icontains=query) |
@@ -413,26 +394,145 @@ def show_products_function(request):
             Q(product_brand__brand_name__icontains=query)  # Assuming product_brand has a related field brand_name
         )
         
-        filtered_serializer = Product_show_api(product_data, many=True)
-        context.update({'data': filtered_serializer.data})
+    paginator = Paginator(product_data, 5)
+    page_number = request.GET.get('page',1)
+    page_obj = paginator.get_page(page_number)
+    products_list = []
+    for product in page_obj:
+        inoffer = None
+        price_after_offer = None
+        for offer in product.offer_product_data.all():
+            inoffer = offer.offer_del_offer.offer_name
+            price_after_offer = product.product_mrp - (offer.offer_del_offer.offer_discount * product.product_mrp / 100)
 
-    paginators_data = page_paginators(context['data'], request)
-    context.update({'data':paginators_data['data'],'total_pages':paginators_data['total_pages']})
-    return Response(context)
+        products_list.append({
+            'product_id': product.product_id,
+            'product_name': product.product_name,
+            'product_mrp': product.product_mrp,
+            'product_selling_price': product.product_selling_price,
+            'product_desc': product.product_desc,
+            'product_stock': product.product_stock,
+            'product_status': product.product_status,
+            'product_img1': product.product_img1.url if product.product_img1 else None,
+            'product_img2': product.product_img2.url if product.product_img2 else None,
+            'product_color': [{"color_color": color.color_color,"color_id": color.color_id} for color in product.product_color.all()],
+            'product_size': [{"size_size": size.size_size,"size_id":size.size_id,"size_cat_id":size.size_cat.category_id,"size_cat_name":size.size_cat.category_name} for size in product.product_size.all()],
+            'product_brand': {
+                'brand_id': product.product_brand.brand_id,
+                'brand_name': product.product_brand.brand_name
+            } if product.product_brand else None,
+            'product_cat': {
+                'category_id': product.product_cat.category_id,
+                'category_name': product.product_cat.category_name
+            } if product.product_cat else None,
+            'product_ava': [{"product_ava_id": ava.product_ava_id,'product_ava_area':ava.product_ava_area,'product_ava_pincode':ava.product_ava_pincode} for ava in product.product_ava.all()],
+            'average_rating': round(product.average_rating,2) if product.average_rating is not None else 0,
+            'total_reviews': product.total_reviews if product.total_reviews is not None else 0, 
+            'inoffer': inoffer,
+            'price_after_offer': price_after_offer,
+        })
+
+    offers_list = Offer.objects.all().values('offer_id','offer_name')    
+
+    return Response({
+        'data': products_list,
+        'status': True,
+        'total_pages' : paginator.num_pages,
+        'offers_list': offers_list,
+    })
 
 @api_view(['GET'])
 def show_product_details_function(request):
-    product_id = request.GET.get('product_id')
-    if not product_id:
-        return Response({'status': False, 'message': 'Pass the product_id'}, status=400)
+    if request.GET.get('product_id'):
+        product_id = request.GET.get('product_id')
+        product_detail = Product.objects.filter(product_id = product_id).prefetch_related('product_size', 'product_color', 'product_ava','product_reviews','offer_product_data').annotate(
+        average_rating=Avg('product_reviews__review_rating')  # Calculate average rating
+        ).all()
+        
+        if request.GET.get('get_color'):
+            get_color = request.GET.get('get_color')
+            product_detail = product_detail.filter(product_color__color_id=get_color)
 
-    product_data = Product.objects.prefetch_related('product_size', 'product_color', 'product_ava').get(product_id=product_id)
-    serializer = Product_show_api(product_data)
-    context = {
-        'data':serializer.data,
-        'status': True
-    }
-    return Response({'status': True, 'data': context})
+        if request.GET.get('get_cat'):
+            get_cat = request.GET.get('get_cat')
+            product_detail = product_detail.filter(product_cat__category_id=get_cat)
+
+        if request.GET.get('get_brand'):
+            get_brand = request.GET.get('get_brand')
+            product_detail = product_detail.filter(product_brand__brand_id=get_brand)
+
+        if request.GET.get('get_size'):
+            get_size = request.GET.get('get_size')
+            product_detail = product_detail.filter(product_size__size_id=get_size)
+
+        query = request.GET.get('searchhere', '')
+        if query:
+            product_detail = product_detail.filter(
+                Q(product_name__icontains=query) |
+                Q(product_mrp__icontains=query) |
+                Q(product_selling_price__icontains=query) |
+                Q(product_desc__icontains=query) |
+                Q(product_stock__icontains=query) |
+                Q(product_color__color_name__icontains=query) |
+                Q(product_status__icontains=query) |
+                Q(product_size__size_size__icontains=query) |
+                Q(product_brand__brand_name__icontains=query)
+            )
+
+        paginator = Paginator(product_detail, 5)
+        page_number = request.GET.get('page',1)
+        page_obj = paginator.get_page(page_number)
+        products_list = []
+        for product in page_obj:
+            inoffer = None
+            price_after_offer = None
+            for offer in product.offer_product_data.all():
+                inoffer = offer.offer_del_offer.offer_name
+                price_after_offer = product.product_mrp - (offer.offer_del_offer.offer_discount * product.product_mrp / 100)
+
+            products_list.append({
+                'product_id': product.product_id,
+                'product_name': product.product_name,
+                'product_mrp': product.product_mrp,
+                'product_selling_price': product.product_selling_price,
+                'product_desc': product.product_desc,
+                'product_stock': product.product_stock,
+                'product_status': product.product_status,
+                'product_img1': product.product_img1.url if product.product_img1 else None,
+                'product_img2': product.product_img2.url if product.product_img2 else None,
+                'product_img3': product.product_img3.url if product.product_img3 else None,
+                'product_img4': product.product_img4.url if product.product_img4 else None,
+                'product_img5': product.product_img5.url if product.product_img5 else None,
+                'product_img6': product.product_img6.url if product.product_img6 else None,
+                'product_img7': product.product_img7.url if product.product_img7 else None,
+                'product_img8': product.product_img8.url if product.product_img8 else None,
+                'product_color': [{"color_color": color.color_color,"color_id": color.color_id} for color in product.product_color.all()],
+                'product_size': [{"size_size": size.size_size,"size_id":size.size_id,"size_cat_id":size.size_cat.category_id,"size_cat_name":size.size_cat.category_name} for size in product.product_size.all()],
+                'product_brand': {
+                    'brand_id': product.product_brand.brand_id,
+                    'brand_name': product.product_brand.brand_name
+                } if product.product_brand else None,
+                'product_reviews':[{'review_id':Review.review_id, 'review_date':Review.review_date, 'review_review':Review.review_review,'customer_id':Review.review_customer.customer_id, 'customer_name':"{} {}".format(Review.review_customer.customer_fname, Review.review_customer.customer_lname), 'review_rating':Review.review_rating, 'review_img':Review.review_img if Review.review_img else None} for Review in product.product_reviews.all()],
+                'product_cat': {
+                    'category_id': product.product_cat.category_id,
+                    'category_name': product.product_cat.category_name
+                } if product.product_cat else None,
+                'product_ava': [{"product_ava_id": ava.product_ava_id,'product_ava_area':ava.product_ava_area,'product_ava_pincode':ava.product_ava_pincode} for ava in product.product_ava.all()],
+                'average_rating': product.average_rating if product.average_rating is not None else 0,
+                'inoffer': inoffer,
+                'price_after_offer': price_after_offer,
+                
+            })
+
+        return Response({
+            'data': products_list,
+            'status': True
+        })
+    
+    return Response({
+        'status': False,
+        'message': 'product_id is required'
+    })
 
 
 @api_view(['GET'])
