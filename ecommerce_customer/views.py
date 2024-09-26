@@ -71,23 +71,36 @@ def customer_update_account_function(request):
         if request.GET.get('pk'):
             instance = get_object_or_404(Customer, pk=request.GET['pk'])
             customer_data = request.data
+            print(customer_data)
             form = Customer_api(data = customer_data, instance = instance, partial = True)
-            if form.is_valid():
-                form.save()
-                return Response({
-                    "status":True,
-                    "message":"Your account has been updated"
-                })
-            else:
-                error_messages = []
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        error_messages.append(f"{field}: {error}")
+            check = Customer.objects.filter(customer_id = instance.pk).count()
+            if check:
+                email = Customer.objects.filter(customer_email = customer_data.get('customer_email')).count()
+                if not email:
+                    if form.is_valid():
+                        form.save()
+                        return Response({
+                            "status":True,
+                            "message":"Your account has been updated"
+                        })
+                    else:
+                        error_messages = []
+                        for field, errors in form.errors.items():
+                            for error in errors:
+                                error_messages.append(f"{field}: {error}")
 
+                        return Response({
+                            'status':False,
+                            'message': " ".join(error_messages)
+                        })
+                else:
+                    return Response({'status':False, 'message':'This email id is already used'})
+            else:
                 return Response({
-                    'status':False,
-                    'message': " ".join(error_messages)
-                })
+                            'status':False,
+                            'message': "No user found"
+                        })
+                    
     else:
         if request.GET.get('pk'):
             instance = get_object_or_404(Customer, pk=request.GET['pk'])
