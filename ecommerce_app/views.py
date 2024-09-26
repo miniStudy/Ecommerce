@@ -1749,7 +1749,37 @@ def show_stock_details_function(request):
 
 @api_view(['GET', 'POST'])    
 def insert_stock_details_function(request):
-    pass
+    data = {
+            "stock_supplier": "Track N Trace",
+            "stock_sku": "100",
+            "stock_total_order_value": 10000.0,
+            "stock_products": [
+                {
+                   
+                    "sp_product_name": "GPS",
+                    "sp_product_code": "101",
+                    "sp_category": "Watches",
+                    "sp_category_id": 8,
+                    "sp_sub_category": '',
+                    "stock_products_details": [
+                        {
+                            "sd_id": 1,
+                            "sd_price": 3500.0,
+                            "sd_quantity": 10,
+                            "sd_size_id": 1,
+                            "sd_size": "L",
+                            "sd_color": "black"
+                        }
+                    ]
+                }
+            ]
+        }
+
+    stock_data = Stock.objects.create(stock_supplier=data['stock_supplier'], stock_sku = data['stock_sku'],stock_total_order_value=data['stock_total_order_value'])
+    stock_data.save()
+        
+
+    return Response({'message' :'datasaved','stock_id':stock_data.stock_id})
 
 
 @api_view(['GET']) 
