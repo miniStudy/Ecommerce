@@ -1711,3 +1711,76 @@ def customer_return_order_accept_function(request):
     
     else:
         return Response({'status': False, 'message': 'Invalid return status'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])    
+def show_stock_details_function(request):
+    stock_data = Stock.objects.prefetch_related('stock_product_data').all()
+
+    query = request.GET.get('searchhere', '')
+    if query:
+        stock_data = stock_data.filter(
+            Q(stock_supplier__icontains=query) |
+            Q(stock_sku__icontains=query) |
+            Q(stock_total_order_value__icontains=query) |
+            Q(created_at__icontains=query))
+        
+    paginator = Paginator(stock_data, 5)
+    page_number = request.GET.get('page',1)
+    page_obj = paginator.get_page(page_number)
+    stock_list = []
+    for stock in page_obj:
+        stock_list.append({'stock_id':stock.stock_id,
+                           'stock_supplier':stock.stock_supplier,
+                           'stock_sku':stock.stock_sku,
+                           'stock_total_order_value':stock.stock_total_order_value,
+                           'created_at':stock.created_at,
+                            'stock_products': [
+                                {'sp_id':data.sp_id, 
+                                 'sp_product_name': data.sp_product_name, 
+                                 'sp_product_code': data.sp_product_code, 
+                                 'sp_category':data.sp_category.category_name,
+                                 'sp_category_id':data.sp_category.category_id, 
+                                 'sp_sub_category':data.sp_sub_category,
+                                 'stock_products_details': [{'sd_id':pd.sd_id, 'sd_price':pd.sd_price, 'sd_quantity':pd.sd_quantity,'sd_size_id':pd.sd_size.size_id, 'sd_size':pd.sd_size.size_size, 'sd_id':pd.sd_color.color_id, 'sd_color':pd.sd_color.color_color} for pd in data.stock_details_data.all()]
+                                 } for data in stock.stock_product_data.all()]
+                        })
+    context = {'status':True, 'data':stock_list}
+    return Response(context)
+
+@api_view(['GET', 'POST'])    
+def insert_stock_details_function(request):
+    pass
+
+
+@api_view(['GET']) 
+def show_stock_management_details_function(request):
+    stock_management = Stock_management.objects.prefetch_related('stock_management_data').all()
+
+    query = request.GET.get('searchhere', '')
+    if query:
+        stock_management = stock_management.filter(
+            Q(sm_product_name__icontains=query) |
+            Q(sm_product_code__icontains=query) |
+            Q(sm_sub_category__icontains=query))
+        
+    paginator = Paginator(stock_management, 5)
+    page_number = request.GET.get('page',1)
+    page_obj = paginator.get_page(page_number)
+    stock_management_list = []
+    for stock_manage in page_obj:
+        stock_management_list.append({
+            'sm_id': stock_manage.sm_id,
+            'sm_product_name': stock_manage.sm_product_name,
+            'sm_product_code':stock_manage.sm_product_code,
+            'sm_category_id':stock_manage.sm_category.category_id,
+            'sm_category':stock_manage.sm_category.category_name,
+            'sm_brand_id':stock_manage.sm_brand.brand_id,
+            'sm_brand':stock_manage.sm_brand.brand_name,
+            'sm_sub_category':stock_manage.sm_sub_category,
+            'stock_manage':[
+                {'smd_id':data.smd_id, 'smd_price':data.smd_price, 'smd_quantity':data.smd_quantity, 'smd_size_id': data.smd_size.size_id, 'smd_size': data.smd_size.size_size, 'smd_color_id': data.smd_color.color_color, 'smd_color':data.smd_color.color_color} for data in stock_manage.stock_management_data.all()
+            ]
+        })
+    context = {'data':stock_management_list}  
+    return Response(context)
+    
