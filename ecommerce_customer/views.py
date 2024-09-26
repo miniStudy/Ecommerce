@@ -636,3 +636,17 @@ def customer_return_order_function(request):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
+
+@api_view(['GET']) 
+def customer_show_order_function(request):
+    customer_id = request.GET.get('customer_id')
+    order_data = Order.objects.filter(order_customer_customer_id = customer_id).values('order_id', 'order_code', 'order_address_id', 'order_address_idaddress_line1', 'order_address_idaddress_landmark', 'order_address_idaddress_country', 'order_address_idaddress_city', 'order_address_idaddress_state', 'order_address_idaddress_country', 'order_address_idaddress_zipcode', 'order_address_idaddress_phone', 'order_payment_mode', 'order_status', 'order_delivered_date', 'order_payment_mode', 'order_tax_amount', 'order_delivery_charge', 'order_paid', 'order_amount', 'order_date', 'order_customer_customer_id')
+
+    order_details_data = OrderDetails.objects.filter(orderDet_customer_customer_id = customer_id).values('orderDet_id', 'orderDet_productproduct_name', 'orderDet_productproduct_mrp', 'orderDet_productproduct_selling_price', 'orderDet_productproduct_desc', 'orderDet_productproduct_stock', 'orderDet_productproduct_colorcolor_color', 'orderDet_productproduct_status', 'orderDet_productproduct_img1', 'orderDet_productproduct_avaproduct_ava_area', 'orderDet_productproduct_brand_brand_name', 'orderDet_price', 'orderDet_quantity')
+    context = {
+        'data':order_data,
+        'data2': order_details_data,
+        'status': True
+    }
+    return Response(context)    
+    
