@@ -1724,7 +1724,7 @@ def show_stock_details_function(request):
             Q(stock_total_order_value__icontains=query) |
             Q(created_at__icontains=query))
         
-    paginator = Paginator(stock_data, 5)
+    paginator = Paginator(stock_data, 50)
     page_number = request.GET.get('page',1)
     page_obj = paginator.get_page(page_number)
     stock_list = []
@@ -1759,8 +1759,9 @@ def insert_stock_details_function(request):
                     "sp_product_name": "GPS",
                     "sp_product_code": "101",
                     "sp_category": "Watches",
+                    "sp_brand_id": 1,
                     "sp_category_id": 8,
-                    "sp_sub_category": '',
+                    "sp_sub_category": 'Track',
                     "stock_products_details": [
                         {
                             "sd_id": 1,
@@ -1768,7 +1769,8 @@ def insert_stock_details_function(request):
                             "sd_quantity": 10,
                             "sd_size_id": 1,
                             "sd_size": "L",
-                            "sd_color": "black"
+                            "sd_color": "black",
+                            "sd_color_id": 1,
                         }
                     ]
                 }
@@ -1776,8 +1778,19 @@ def insert_stock_details_function(request):
         }
 
     stock_data = Stock.objects.create(stock_supplier=data['stock_supplier'], stock_sku = data['stock_sku'],stock_total_order_value=data['stock_total_order_value'])
-    stock_data.save()
+
+    for x in data['stock_products']:
+        sp_category = Category.objects.get(category_id=x['sp_category_id'])
+        sp_brand_id = Brand.objects.get(brand_id=x['sp_brand_id'])
+
+        stock_product_data = Stock_product.objects.create(sp_product_name=x['sp_product_name'], sp_product_code=x['sp_product_code'], sp_category=sp_category, sp_brand=sp_brand_id, sp_sub_category=x['sp_sub_category'], sp_stock = stock_data)
         
+
+        for y in x['stock_products_details']:
+            sd_size = Size.objects.get(size_id=y['sd_size_id'])
+            sd_color = Color.objects.get(color_id=y['sd_color_id'])
+
+            stock_details_data = stock_details.objects.create(sd_price=y['sd_price'], sd_quantity=y['sd_quantity'], sd_size=sd_size, sd_color=sd_color, sd_product=stock_product_data)
 
     return Response({'message' :'datasaved','stock_id':stock_data.stock_id})
 
