@@ -105,7 +105,9 @@ urlpatterns = [
     #============================= Stock ===========================================================
     path('show_stock_details/', views.show_stock_details_function, name='show_stock_details'),
     path('insert_stock_details/', views.insert_stock_details_function, name='insert_stock_details'),
+    path('delete_stock_details/', views.delete_stock_details_function, name='delete_stock_details'),
 
     #============================= Stock Management ===============================================
     path('show_stock_management_details/', views.show_stock_management_details_function, name='show_stock_management_details'),
+    path('insert_stock_management_details/', views.insert_stock_management_details_function, name='insert_stock_management_details'),
 ]
