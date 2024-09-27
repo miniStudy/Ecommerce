@@ -937,7 +937,8 @@ def show_product_details_function(request):
 
         return Response({
             'data': products_list,
-            'status': True
+            'status': True,
+            'Total Pages':paginator.num_pages
         })
     
     return Response({
@@ -1449,7 +1450,8 @@ def show_order_function(request):
 
     return Response({
             'data': order_list,
-            'status': True
+            'status': True,
+            'Total Pages':paginator.num_pages
         })
 
 @api_view(['POST'])
@@ -1593,7 +1595,8 @@ def show_order_details_function(request):
 
         return Response({
                 'data': order_list,
-                'status': True
+                'status': True,
+                'Total Pages':paginator.num_pages
             })
     
     return Response({'status':False, 'message': 'order_id is required'})
@@ -1744,7 +1747,7 @@ def show_stock_details_function(request):
                                  'stock_products_details': [{'sd_id':pd.sd_id, 'sd_price':pd.sd_price, 'sd_quantity':pd.sd_quantity,'sd_size_id':pd.sd_size.size_id, 'sd_size':pd.sd_size.size_size, 'sd_id':pd.sd_color.color_id, 'sd_color':pd.sd_color.color_color} for pd in data.stock_details_data.all()]
                                  } for data in stock.stock_product_data.all()]
                         })
-    context = {'status':True, 'data':stock_list}
+    context = {'status':True, 'data':stock_list, 'total_pages':paginator.num_pages}
     return Response(context)
 
 @api_view(['GET', 'POST'])    
@@ -1851,5 +1854,5 @@ def show_stock_management_details_function(request):
                 {'smd_id':data.smd_id, 'smd_price':data.smd_price, 'smd_quantity':data.smd_quantity, 'smd_size_id': data.smd_size.size_id, 'smd_size': data.smd_size.size_size, 'smd_color_id': data.smd_color.color_color, 'smd_color':data.smd_color.color_color} for data in stock_manage.stock_management_data.all()
             ]
         })
-    context = {'data':stock_management_list}  
+    context = {'data':stock_management_list,'total_pages':paginator.num_pages}  
     return Response(context)
