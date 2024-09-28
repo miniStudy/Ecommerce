@@ -520,6 +520,7 @@ def show_product_details_function(request):
                 'product_img7': product.product_img7.url if product.product_img7 else None,
                 'product_img8': product.product_img8.url if product.product_img8 else None,
                 'product_color': [{"color_color": color.color_color,"color_id": color.color_id} for color in product.product_color.all()],
+                
                 'product_size': [{"size_size": size.size_size,"size_id":size.size_id,"size_cat_id":size.size_cat.category_id,"size_cat_name":size.size_cat.category_name} for size in product.product_size.all()],
                 'product_brand': {
                     'brand_id': product.product_brand.brand_id,
