@@ -1550,12 +1550,7 @@ def show_order_details_function(request):
     print("hello")
     if request.GET.get('order_id'):
         order_id = request.GET.get('order_id')
-<<<<<<< HEAD
         OrderDetails_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').get(order_id=order_id)
-=======
-        print(order_id)
-        OrderDetails_data = OrderDetails.objects.filter(orderDet_order__order_id = order_id).prefetch_related('orderDet_product', 'orderDet_size_id', 'orderDet_customer', 'orderDet_order', 'orderDet_color').all()
->>>>>>> 2be3182b1b7259125d0a4ea842a6bc33679f839a
 
         order_dict = {}
         order_dict.update({
