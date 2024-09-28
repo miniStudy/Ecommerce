@@ -1851,7 +1851,6 @@ def show_stock_management_details_function(request):
                 {'smd_id':data.smd_id, 'smd_price':data.smd_price, 'smd_quantity':data.smd_quantity, 'smd_size_id': data.smd_size.size_id, 'smd_size': data.smd_size.size_size, 'smd_color_id': data.smd_color.color_color, 'smd_color':data.smd_color.color_color} for data in stock_manage.stock_management_data.all()
             ]
         })
-<<<<<<< HEAD
     context = {'data':stock_management_list}  
     return Response(context)
 
@@ -1875,8 +1874,4 @@ def delete_stock_management_details_function(request):
         return Response({
             'status': False,
             'message': 'Give pk for Delete'
-        }) 
-=======
-    context = {'data':stock_management_list,'total_pages':paginator.num_pages}  
-    return Response(context)
->>>>>>> 38f82b640271f0a4b21d6eb3f893ecb8a4bdcdbc
+        })
