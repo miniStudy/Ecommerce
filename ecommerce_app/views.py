@@ -1547,8 +1547,10 @@ def change_order_status_function(request):
 
 @api_view(['GET'])
 def show_order_details_function(request):
+    print("hello")
     if request.GET.get('order_id'):
         order_id = request.GET.get('order_id')
+        print(order_id)
         OrderDetails_data = OrderDetails.objects.filter(orderDet_order__order_id = order_id).prefetch_related('orderDet_product', 'orderDet_size_id', 'orderDet_customer', 'orderDet_order', 'orderDet_color').all()
 
         query = request.GET.get('searchhere', '')
