@@ -1591,16 +1591,13 @@ def show_order_details_function(request):
                             'address_city': order.orderDet_order.order_address_id.address_city,
                             'address_state': order.orderDet_order.order_address_id.address_state,
                             'address_zipcode': order.orderDet_order.order_address_id.address_zipcode,
-                            'address_phone': order.orderDet_order.order_address_id.address_phone}
-                
+                            'address_phone': order.orderDet_order.order_address_id.address_phone}  
             })
-
         return Response({
                 'data': order_list,
                 'status': True,
                 'Total Pages':paginator.num_pages
             })
-    
     return Response({'status':False, 'message': 'order_id is required'})
 
 @api_view(['POST'])
@@ -1813,7 +1810,7 @@ def delete_stock_details_function(request):
             stock_det.delete()
             return Response({
                 "status": True,
-                "message": "Offer Details has been deleted successfully"
+                "message": "Stock has been deleted successfully"
             })
         except Exception as e:
             return Response({
@@ -1856,5 +1853,27 @@ def show_stock_management_details_function(request):
                 {'smd_id':data.smd_id, 'smd_price':data.smd_price, 'smd_quantity':data.smd_quantity, 'smd_size_id': data.smd_size.size_id, 'smd_size': data.smd_size.size_size, 'smd_color_id': data.smd_color.color_color, 'smd_color':data.smd_color.color_color} for data in stock_manage.stock_management_data.all()
             ]
         })
-    context = {'data':stock_management_list,'total_pages':paginator.num_pages}  
+    context = {'data':stock_management_list}  
     return Response(context)
+
+
+@api_view(['DELETE'])
+def delete_stock_management_details_function(request):
+    if request.GET.get('pk'):
+        try:
+            stock_manage_det = get_object_or_404(Stock_management, pk=request.GET['pk'])
+            stock_manage_det.delete()
+            return Response({
+                "status": True,
+                "message": "Stock Management has been deleted successfully"
+            })
+        except Exception as e:
+            return Response({
+                "status": False,
+                "message": str(e)
+            }) 
+    else:
+        return Response({
+            'status': False,
+            'message': 'Give pk for Delete'
+        })

@@ -340,7 +340,7 @@ class OrderDetails(models.Model):
     orderDet_color = models.ForeignKey(Color, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.orderDet_product.product_name} - {self.orderDet_price} - {self.orderDet_status}"
+        return f"{self.orderDet_id} {self.orderDet_product.product_name} - {self.orderDet_price} - {self.orderDet_status}"
     
     class Meta:
         db_table = 'OrderDetails'

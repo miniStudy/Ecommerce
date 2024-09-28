@@ -64,32 +64,32 @@ urlpatterns = [
     path('update_review/', views.update_review_function, name='update_review'),
     path('delete_review/', views.delete_review_function, name='delete_review'),
 
-    #============================= Cart ===============================================================================
+    #============================= Cart ==========================================
     path('show_cart/', views.show_cart_function, name='show_cart'),
     path('insert_cart/', views.insert_cart_function, name='insert_cart'),
     path('update_cart/', views.update_cart_function, name='update_cart'),
     path('delete_cart/', views.delete_cart_function, name='delete_cart'),
 
-    #============================= Offer ==============================================================================
+    #============================= Offer ========================================================
     path('show_offer/', views.show_offer_function, name='show_offer'),
     path('insert_offer/', views.insert_offer_function, name='insert_offer'),
     path('update_offer/', views.update_offer_function, name='update_offer'),
     path('delete_offer/', views.delete_offer_function, name='delete_offer'),
 
-    #============================= Offer Details =======================================================================
+    #============================= Offer Details ================================================
     path('show_offer_details/', views.show_offer_details_function, name='show_offer_details'),
     path('insert_offer_details/', views.insert_offer_details_function, name='insert_offer_details'),
     path('update_offer_details/', views.update_offer_details_function, name='update_offer_details'),
     path('delete_offer_details/', views.delete_offer_details_function, name='delete_offer_details'),
 
-    #============================= Order ==============================================================================
+    #============================= Order ==========================================================
     path('show_order/', views.show_order_function, name='show_order'),
     path('insert_order/', views.insert_order_function, name='insert_order'),
     path('update_order/', views.update_order_function, name='update_order'),
     path('delete_order/', views.delete_order_function, name='delete_order'),
     path('change_order_status/', views.change_order_status_function, name='change_order_status'),
 
-    #============================= Order Details ======================================================================
+    #============================= Order Details ====================================================
     path('show_order_details/', views.show_order_details_function, name='show_order_details'),
     path('insert_order_details/', views.insert_order_details_function, name='insert_order_details'),
     path('update_order_details/', views.update_order_details_function, name='update_order_details'),
@@ -109,4 +109,5 @@ urlpatterns = [
 
     #============================= Stock Management ===============================================
     path('show_stock_management_details/', views.show_stock_management_details_function, name='show_stock_management_details'),
+    path('delete_stock_management_details/', views.delete_stock_management_details_function, name='delete_stock_management_details'),
 ]
