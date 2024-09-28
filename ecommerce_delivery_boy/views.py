@@ -43,7 +43,54 @@ def db_create_account_function(request):
             'status':False,
             'message': " ".join(error_messages)
         })
-    
+
+@api_view(['GET']) 
+def db_show_function(request):
+    db_data = delivery_boy.objects.all().values('db_id', 'db_name', 'db_email', 'db_phone', 'db_address')
+
+    query = request.GET.get('searchhere', '')
+    if query:
+        db_data = db_data.filter(
+            Q(db_name__icontains=query) |
+            Q(db_email__icontains=query) |
+            Q(db_address__icontains=query))
+        
+    paginator = Paginator(db_data, 10)
+    page_number = request.GET.get('page',1)
+    page_obj = paginator.get_page(page_number)
+    db_show_list = []
+    for db in page_obj:
+        db_show_list.append({
+            'db_id': db['db_id'],
+            'db_name': db['db_name'],
+            'db_email': db['db_email'],
+            'db_phone': db['db_phone'],
+            'db_address': db['db_address'],
+        })
+    context = {'data':db_show_list}  
+    return Response(context)
+
+@api_view(['DELETE'])
+def db_delete_function(request):
+    if request.GET.get('pk'):
+        try:
+            db_delete = get_object_or_404(delivery_boy, pk=request.GET['pk'])
+            db_delete.delete()
+            return Response({
+                "status": True,
+                "message": "Delevery Boy has been deleted successfully"
+            })
+        except Exception as e:
+            return Response({
+                "status": False,
+                "message": str(e)
+            }) 
+    else:
+        return Response({
+            'status': False,
+            'message': 'Give pk for Delete'
+        })
+
 @api_view(['GET','POST'])
 def db_login_function(request):
     if request.method == 'POST':
