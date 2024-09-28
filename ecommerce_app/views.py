@@ -165,22 +165,33 @@ def update_customer_function(request):
             instance = get_object_or_404(Customer, pk=request.GET['pk'])
             customer_data = request.data
             form = Customer_api(data = customer_data, instance = instance, partial = True)
-            if form.is_valid():
-                form.save()
-                return Response({
-                    "status":True,
-                    "message":"Your account has been updated"
-                })
-            else:
-                error_messages = []
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        error_messages.append(f"{field}: {error}")
+            check = Customer.objects.filter(customer_id = instance.pk).count()
+            if check:
+                email = Customer.objects.filter(customer_email = customer_data.get('customer_email')).count()
+                if not email:
+                    if form.is_valid():
+                        form.save()
+                        return Response({
+                            "status":True,
+                            "message":"Your account has been updated"
+                        })
+                    else:
+                        error_messages = []
+                        for field, errors in form.errors.items():
+                            for error in errors:
+                                error_messages.append(f"{field}: {error}")
 
+                        return Response({
+                            'status':False,
+                            'message': " ".join(error_messages)
+                        })
+                else:
+                    return Response({'status':False, 'message':'This email id is already used'})
+            else:
                 return Response({
-                    'status':False,
-                    'message': " ".join(error_messages)
-                })
+                            'status':False,
+                            'message': "No user found"
+                        })
     else:
         if request.GET.get('pk'):
             instance = get_object_or_404(Customer, pk=request.GET['pk'])
@@ -1547,56 +1558,39 @@ def change_order_status_function(request):
 
 @api_view(['GET'])
 def show_order_details_function(request):
+    print("hello")
     if request.GET.get('order_id'):
         order_id = request.GET.get('order_id')
-        OrderDetails_data = OrderDetails.objects.filter(orderDet_order__order_id = order_id).prefetch_related('orderDet_product', 'orderDet_size_id', 'orderDet_customer', 'orderDet_order', 'orderDet_color').all()
+        OrderDetails_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').get(order_id=order_id)
 
-        query = request.GET.get('searchhere', '')
-        if query:
-            OrderDetails_data = OrderDetails_data.filter(
-                Q(orderDet_price__icontains=query) |
-                Q(orderDet_price__icontains=query) |
-                Q(orderDet_quantity__icontains=query) |
-                Q(orderDet_size_id__icontains=query))
-
-        paginator = Paginator(OrderDetails_data, 5)
-        page_number = request.GET.get('page',1)
-        page_obj = paginator.get_page(page_number)
-        order_list = []
-        for order in page_obj:
-            order_list.append({
-                'orderDet_id': order.orderDet_id,
-                'orderDet_product': {"product_id":order.orderDet_product.product_id, 
-                            'product_name': order.orderDet_product.product_name, 
-                            'product_brand': order.orderDet_product.product_brand.brand_name, 
-                            'product_size': order.orderDet_size_id.size_size,  
-                            'product_color': order.orderDet_color.color_color, 
-                            'product_img1': order.orderDet_product.product_img1.url, 
-                            'product_returnable': order.orderDet_product.product_returnable},
-                'orderDet_price':order.orderDet_price,
-                'orderDet_quantity':order.orderDet_quantity,
-                'orderDet_status':order.orderDet_status,
-                'orderDet_customer':{'customer_id':order.orderDet_customer.customer_id, 
-                            'customer_name': "{} {}".format(order.orderDet_customer.customer_fname, order.orderDet_customer.customer_lname), 
-                            'customer_email': order.orderDet_customer.customer_email, 
-                            'customer_phone': order.orderDet_customer.customer_phone, 
-                            'customer_active': order.orderDet_customer.customer_active},
-                'Address_details':{'address_id': order.orderDet_order.order_address_id.address_id,
-                            'order_address1': order.orderDet_order.order_address_id.address_line1,
-                            'order_address2': order.orderDet_order.order_address_id.address_line2,
-                            'address_landmark': order.orderDet_order.order_address_id.address_landmark,
-                            'address_country': order.orderDet_order.order_address_id.address_country,
-                            'address_city': order.orderDet_order.order_address_id.address_city,
-                            'address_state': order.orderDet_order.order_address_id.address_state,
-                            'address_zipcode': order.orderDet_order.order_address_id.address_zipcode,
-                            'address_phone': order.orderDet_order.order_address_id.address_phone}  
+        order_dict = {}
+        order_dict.update({
+                'orderDet_id': OrderDetails_data.order_id,
+                'orderDet_product': [{
+                    "product_id": data.orderDet_product.product_id,
+                    'product_name': data.orderDet_product.product_name,
+                    'product_price': data.orderDet_price,
+                    'orderDet_quantity': data.orderDet_quantity,
+                    'product_status': data.orderDet_status,
+                    'product_brand': data.orderDet_product.product_brand.brand_name,
+                    'product_size': data.orderDet_size_id.size_size,
+                    'product_size_id': data.orderDet_size_id.size_id,
+                    'product_color': data.orderDet_color.color_color,
+                    'product_color_id': data.orderDet_color.color_id,
+                    'product_img1': data.orderDet_product.product_img1.url,
+                    'product_cat': data.orderDet_product.product_cat.category_name,
+                    'product_returnable': data.orderDet_product.product_returnable,
+                    'product_active': data.orderDet_product.product_active,
+                } for data in OrderDetails_data.order_details.all()],
             })
         return Response({
-                'data': order_list,
-                'status': True,
-                'Total Pages':paginator.num_pages
-            })
-    return Response({'status':False, 'message': 'order_id is required'})
+       
+            'status': True,
+            'data': order_dict,
+        })
+    
+    return Response({'status': False, 'message': 'order_id is required'})
+
 
 @api_view(['POST'])
 def insert_order_details_function(request):

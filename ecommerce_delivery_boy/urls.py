@@ -11,4 +11,7 @@ urlpatterns = [
     path('db_show_orders/', deliveryviews.db_show_orders_function, name= 'db_show_orders'),
     path('db_order_status/', deliveryviews.db_order_status_function, name= 'db_order_status'),
     path('db_return_order_accept/', deliveryviews.db_return_order_accept_function, name= 'db_return_order_accept'),
+    path('db_show/', deliveryviews.db_show_function, name= 'db_show'),
+    path('db_delete/', deliveryviews.db_delete_function, name= 'db_delete'),
+
 ]
