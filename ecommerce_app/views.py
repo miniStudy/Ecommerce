@@ -937,7 +937,8 @@ def show_product_details_function(request):
 
         return Response({
             'data': products_list,
-            'status': True
+            'status': True,
+            'Total Pages':paginator.num_pages
         })
     
     return Response({
@@ -1449,7 +1450,8 @@ def show_order_function(request):
 
     return Response({
             'data': order_list,
-            'status': True
+            'status': True,
+            'Total Pages':paginator.num_pages
         })
 
 @api_view(['POST'])
@@ -1587,15 +1589,13 @@ def show_order_details_function(request):
                             'address_city': order.orderDet_order.order_address_id.address_city,
                             'address_state': order.orderDet_order.order_address_id.address_state,
                             'address_zipcode': order.orderDet_order.order_address_id.address_zipcode,
-                            'address_phone': order.orderDet_order.order_address_id.address_phone}
-                
+                            'address_phone': order.orderDet_order.order_address_id.address_phone}  
             })
-
         return Response({
                 'data': order_list,
-                'status': True
+                'status': True,
+                'Total Pages':paginator.num_pages
             })
-    
     return Response({'status':False, 'message': 'order_id is required'})
 
 @api_view(['POST'])
@@ -1724,7 +1724,7 @@ def show_stock_details_function(request):
             Q(stock_total_order_value__icontains=query) |
             Q(created_at__icontains=query))
         
-    paginator = Paginator(stock_data, 5)
+    paginator = Paginator(stock_data, 50)
     page_number = request.GET.get('page',1)
     page_obj = paginator.get_page(page_number)
     stock_list = []
@@ -1744,7 +1744,7 @@ def show_stock_details_function(request):
                                  'stock_products_details': [{'sd_id':pd.sd_id, 'sd_price':pd.sd_price, 'sd_quantity':pd.sd_quantity,'sd_size_id':pd.sd_size.size_id, 'sd_size':pd.sd_size.size_size, 'sd_id':pd.sd_color.color_id, 'sd_color':pd.sd_color.color_color} for pd in data.stock_details_data.all()]
                                  } for data in stock.stock_product_data.all()]
                         })
-    context = {'status':True, 'data':stock_list}
+    context = {'status':True, 'data':stock_list, 'total_pages':paginator.num_pages}
     return Response(context)
 
 @api_view(['GET', 'POST'])    
@@ -1755,12 +1755,12 @@ def insert_stock_details_function(request):
             "stock_total_order_value": 10000.0,
             "stock_products": [
                 {
-                   
                     "sp_product_name": "GPS",
                     "sp_product_code": "101",
                     "sp_category": "Watches",
+                    "sp_brand_id": 1,
                     "sp_category_id": 8,
-                    "sp_sub_category": '',
+                    "sp_sub_category": 'Track',
                     "stock_products_details": [
                         {
                             "sd_id": 1,
@@ -1768,6 +1768,7 @@ def insert_stock_details_function(request):
                             "sd_quantity": 10,
                             "sd_size_id": 1,
                             "sd_size": "L",
+                            "sd_color_id": 1,
                             "sd_color": "black"
                         }
                     ]
@@ -1776,8 +1777,25 @@ def insert_stock_details_function(request):
         }
 
     stock_data = Stock.objects.create(stock_supplier=data['stock_supplier'], stock_sku = data['stock_sku'],stock_total_order_value=data['stock_total_order_value'])
-    stock_data.save()
+
+    for x in data['stock_products']:
+        sp_category_id = Category.objects.get(category_id=x['sp_category_id'])
+        sp_brand_id = Brand.objects.get(brand_id=x['sp_brand_id'])
+
+        stock_product_data = Stock_product.objects.create(sp_product_name=x['sp_product_name'], sp_product_code=x['sp_product_code'], sp_category=sp_category_id, sp_brand=sp_brand_id, sp_sub_category=x['sp_sub_category'], sp_stock = stock_data)
+
+        stock_management_data = Stock_management.objects.create(sm_product_name=x['sp_product_name'], sm_product_code=x['sp_product_code'], sm_category=sp_category_id, sm_brand=sp_brand_id, sm_sub_category=x['sp_sub_category'])
         
+
+        for y in x['stock_products_details']:
+            sd_size_id = Size.objects.get(size_id=y['sd_size_id'])
+            print(sd_size_id)
+            sd_color_id = Color.objects.get(color_id=y['sd_color_id'])
+            print(sd_color_id)
+
+            stock_details_data = stock_details.objects.create(sd_price=y['sd_price'], sd_quantity=y['sd_quantity'], sd_size=sd_size_id, sd_color=sd_color_id, sd_product=stock_product_data)
+
+            stock_management_details_data = stock_manage_details.objects.create(smd_price=y['sd_price'], smd_quantity=y['sd_quantity'], smd_size=sd_size_id, smd_color=sd_color_id, smd_product=stock_management_data)
 
     return Response({'message' :'datasaved','stock_id':stock_data.stock_id})
 
@@ -1790,7 +1808,7 @@ def delete_stock_details_function(request):
             stock_det.delete()
             return Response({
                 "status": True,
-                "message": "Offer Details has been deleted successfully"
+                "message": "Stock has been deleted successfully"
             })
         except Exception as e:
             return Response({
@@ -1815,7 +1833,7 @@ def show_stock_management_details_function(request):
             Q(sm_product_code__icontains=query) |
             Q(sm_sub_category__icontains=query))
         
-    paginator = Paginator(stock_management, 5)
+    paginator = Paginator(stock_management, 10)
     page_number = request.GET.get('page',1)
     page_obj = paginator.get_page(page_number)
     stock_management_list = []
@@ -1835,9 +1853,25 @@ def show_stock_management_details_function(request):
         })
     context = {'data':stock_management_list}  
     return Response(context)
-    
 
-@api_view(['GET', 'POST'])    
-def insert_stock_management_details_function(request):
-    pass
 
+@api_view(['DELETE'])
+def delete_stock_management_details_function(request):
+    if request.GET.get('pk'):
+        try:
+            stock_manage_det = get_object_or_404(Stock_management, pk=request.GET['pk'])
+            stock_manage_det.delete()
+            return Response({
+                "status": True,
+                "message": "Stock Management has been deleted successfully"
+            })
+        except Exception as e:
+            return Response({
+                "status": False,
+                "message": str(e)
+            }) 
+    else:
+        return Response({
+            'status': False,
+            'message': 'Give pk for Delete'
+        })
