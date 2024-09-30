@@ -1718,7 +1718,7 @@ def show_stock_details_function(request):
             Q(stock_total_order_value__icontains=query) |
             Q(created_at__icontains=query))
         
-    paginator = Paginator(stock_data, 50)
+    paginator = Paginator(stock_data, 10)
     page_number = request.GET.get('page',1)
     page_obj = paginator.get_page(page_number)
     stock_list = []
