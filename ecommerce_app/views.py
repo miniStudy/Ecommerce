@@ -1560,6 +1560,8 @@ def change_order_status_function(request):
                 order_data.orderDet_status = OrderDetails.OrderDetStatus.OutForDelivery
             elif orderDet_status == 'DELIVERED':
                 order_data.orderDet_status = OrderDetails.OrderDetStatus.DELIVERED
+            elif orderDet_status == 'Rejected':
+                order_data.orderDet_status = OrderDetails.OrderDetStatus.REJECTED
             elif orderDet_status == 'RETURNED':
                 order_data.orderDet_status = OrderDetails.OrderDetStatus.RETURNED
             else:
