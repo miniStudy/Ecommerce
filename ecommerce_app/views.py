@@ -1425,7 +1425,7 @@ def delete_offer_details_function(request):
 @api_view(['GET'])
 def show_order_function(request):
     order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').all()
-
+    
     query = request.GET.get('searchhere', '')
     if query:
         order_data = order_data.filter(
@@ -1456,7 +1456,23 @@ def show_order_function(request):
             "order_paid":order.order_paid,
             "order_date":order.order_date,
             "order_delivered_date":order.order_delivered_date,
-            "order_note":order.order_note
+            "order_note":order.order_note,
+            'order_product': [{
+                    "orderdet_id":data.orderDet_id,
+                    "product_id": data.orderDet_product.product_id,
+                    'product_name': data.orderDet_product.product_name,
+                    'product_price': data.orderDet_price,
+                    'orderDet_quantity': data.orderDet_quantity,
+                    'product_status': data.orderDet_status,
+                    'product_brand': data.orderDet_product.product_brand.brand_name,
+                    'product_size': data.orderDet_size_id.size_size,
+                    'product_size_id': data.orderDet_size_id.size_id,
+                    'product_color': data.orderDet_color.color_color,
+                    'product_color_id': data.orderDet_color.color_id,
+                    'product_img1': data.orderDet_product.product_img1.url,
+                    'product_cat': data.orderDet_product.product_cat.category_name,
+                    'product_returnable': data.orderDet_product.product_returnable,
+                } for data in order.order_details.all()]
         })
 
     return Response({
