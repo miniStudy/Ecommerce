@@ -165,22 +165,33 @@ def update_customer_function(request):
             instance = get_object_or_404(Customer, pk=request.GET['pk'])
             customer_data = request.data
             form = Customer_api(data = customer_data, instance = instance, partial = True)
-            if form.is_valid():
-                form.save()
-                return Response({
-                    "status":True,
-                    "message":"Your account has been updated"
-                })
-            else:
-                error_messages = []
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        error_messages.append(f"{field}: {error}")
+            check = Customer.objects.filter(customer_id = instance.pk).count()
+            if check:
+                email = Customer.objects.filter(customer_email = customer_data.get('customer_email')).count()
+                if not email:
+                    if form.is_valid():
+                        form.save()
+                        return Response({
+                            "status":True,
+                            "message":"Your account has been updated"
+                        })
+                    else:
+                        error_messages = []
+                        for field, errors in form.errors.items():
+                            for error in errors:
+                                error_messages.append(f"{field}: {error}")
 
+                        return Response({
+                            'status':False,
+                            'message': " ".join(error_messages)
+                        })
+                else:
+                    return Response({'status':False, 'message':'This email id is already used'})
+            else:
                 return Response({
-                    'status':False,
-                    'message': " ".join(error_messages)
-                })
+                            'status':False,
+                            'message': "No user found"
+                        })
     else:
         if request.GET.get('pk'):
             instance = get_object_or_404(Customer, pk=request.GET['pk'])
@@ -1414,7 +1425,7 @@ def delete_offer_details_function(request):
 @api_view(['GET'])
 def show_order_function(request):
     order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').all()
-
+    
     query = request.GET.get('searchhere', '')
     if query:
         order_data = order_data.filter(
@@ -1445,7 +1456,23 @@ def show_order_function(request):
             "order_paid":order.order_paid,
             "order_date":order.order_date,
             "order_delivered_date":order.order_delivered_date,
-            "order_note":order.order_note
+            "order_note":order.order_note,
+            'order_product': [{
+                    "orderdet_id":data.orderDet_id,
+                    "product_id": data.orderDet_product.product_id,
+                    'product_name': data.orderDet_product.product_name,
+                    'product_price': data.orderDet_price,
+                    'orderDet_quantity': data.orderDet_quantity,
+                    'product_status': data.orderDet_status,
+                    'product_brand': data.orderDet_product.product_brand.brand_name,
+                    'product_size': data.orderDet_size_id.size_size,
+                    'product_size_id': data.orderDet_size_id.size_id,
+                    'product_color': data.orderDet_color.color_color,
+                    'product_color_id': data.orderDet_color.color_id,
+                    'product_img1': data.orderDet_product.product_img1.url,
+                    'product_cat': data.orderDet_product.product_cat.category_name,
+                    'product_returnable': data.orderDet_product.product_returnable,
+                } for data in order.order_details.all()]
         })
 
     return Response({
@@ -1533,6 +1560,8 @@ def change_order_status_function(request):
                 order_data.orderDet_status = OrderDetails.OrderDetStatus.OutForDelivery
             elif orderDet_status == 'DELIVERED':
                 order_data.orderDet_status = OrderDetails.OrderDetStatus.DELIVERED
+            elif orderDet_status == 'Rejected':
+                order_data.orderDet_status = OrderDetails.OrderDetStatus.REJECTED
             elif orderDet_status == 'RETURNED':
                 order_data.orderDet_status = OrderDetails.OrderDetStatus.RETURNED
             else:
@@ -1707,7 +1736,7 @@ def show_stock_details_function(request):
             Q(stock_total_order_value__icontains=query) |
             Q(created_at__icontains=query))
         
-    paginator = Paginator(stock_data, 50)
+    paginator = Paginator(stock_data, 10)
     page_number = request.GET.get('page',1)
     page_obj = paginator.get_page(page_number)
     stock_list = []
