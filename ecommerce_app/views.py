@@ -57,23 +57,31 @@ def order_analysis(request):
 
 @api_view(['POST'])
 def admin_create_account_function(request):
-    admin_data = request.data
-    form = get_object_or_404(Admin, data = admin_data)
-    if form.is_valid():
-        form.save()
-        return Response({
-            'status': True,
-            'message':'Account has been created successfully. Now you can login!'
-        })
+    if request.method == 'POST':
+        form = AdminForm(request.data)
+        if form.is_valid():
+            form.save()
+            return Response({
+                'status': True,
+                'message':'Account has been created successfully. Now you can login!'
+            })
+        else:
+            error_messages = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_messages.append(f"{field}: {error}")
+            return Response({
+                'status':False,
+                'message': " ".join(error_messages)
+            })
     else:
-        error_messages = []
-        for field, errors in form.errors.items():
-            for error in errors:
-                error_messages.append(f"{field}: {error}")
-        return Response({
-            'status':False,
-            'message': " ".join(error_messages)
-        })
+        return Response({'status':False, 'message':'POST method is required'})
+
+@api_view(['GET'])
+def admin_show_account_function(request):
+    admin_data = Admin.objects.all().values('admin_id', 'admin_fname', 'admin_lname', 'admin_email', 'admin_phone', 'admin_role', 'admin_profile_image')
+    context = {'data': admin_data, 'status':True}
+    return Response(context)
 
 @api_view(['GET','PUT'])
 def admin_update_account_function(request):
@@ -107,14 +115,19 @@ def admin_update_account_function(request):
 
 @api_view(['DELETE'])
 def admin_delete_account_function(request):
-    if request.method == 'DELETE':
-        admin_id = request.GET.get('admin_id')
-        if not admin_id:
-            return Response({'status':False, 'message':'admin_id is required'})
-        admin_data = Admin.objects.get(admin_id = admin_id)
-
-        admin_data.delete()
-        return Response({'status':True, 'message':'Admin account deleted successfully'})
+    if request.GET.get('pk'):
+        try:
+            admin = get_object_or_404(Admin, pk=request.GET['pk'])
+            admin.delete()
+            return Response({
+                "status": True,
+                "message": "Admin has been deleted successfully"
+            })
+        except Exception as e:
+            return Response({
+                "status": False,
+                "error": str(e)
+            })
 
 @api_view(['GET'])
 def show_customer_function(request):
@@ -168,7 +181,7 @@ def update_customer_function(request):
             check = Customer.objects.filter(customer_id = instance.pk).count()
             if check:
                 email = Customer.objects.filter(customer_email = customer_data.get('customer_email')).count()
-                if not email:
+                if email < 2:
                     if form.is_valid():
                         form.save()
                         return Response({
