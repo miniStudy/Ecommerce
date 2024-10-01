@@ -2,6 +2,7 @@ from django.contrib import admin
 from ecommerce_app.models import *
 
 # Register your models here.
+admin.site.register(Admin)
 admin.site.register(Customer)
 admin.site.register(Customer_Address)
 admin.site.register(Product)
