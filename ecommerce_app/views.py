@@ -1557,13 +1557,19 @@ def show_order_function(request):
                     'product_img1': data.orderDet_product.product_img1.url,
                     'product_cat': data.orderDet_product.product_cat.category_name,
                     'product_returnable': data.orderDet_product.product_returnable,
-                } for data in order.order_details.all()]
+                    'delivery_boy':[{'assign_id':deliveryboy.assign_id,'assign_db_name':deliveryboy.assign_db_id.db_name,'assign_db_id':deliveryboy.assign_db_id.db_id,'db_phone':deliveryboy.assign_db_id.db_phone} for deliveryboy in data.assign_order.all()]
+                } for data in order.order_details.prefetch_related('assign_order').all()]
         })
+
+
+
+    delivery_boys = delivery_boy.objects.all().values('db_id','db_name','db_phone')    
 
     return Response({
             'data': order_list,
             'status': True,
-            'Total Pages':paginator.num_pages
+            'total_Pages':paginator.num_pages,
+            'delivery_boys':delivery_boys
         })
 
 @api_view(['POST'])
