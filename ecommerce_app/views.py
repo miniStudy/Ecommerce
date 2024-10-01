@@ -1581,7 +1581,35 @@ def show_order_details_function(request):
 
         order_dict = {}
         order_dict.update({
+                # order data
                 'orderDet_id': OrderDetails_data.order_id,
+                'order_code': OrderDetails_data.order_code,
+                'order_payment_mode': OrderDetails_data.order_payment_mode,
+                'order_amount': OrderDetails_data.order_amount,
+                'order_tax_amount': OrderDetails_data.order_tax_amount,
+                'order_delivery_charge': OrderDetails_data.order_delivery_charge,
+                'order_paid': OrderDetails_data.order_paid,
+                'order_date': OrderDetails_data.order_date,
+                'order_note': OrderDetails_data.order_note,
+                'customer_id': OrderDetails_data.order_customer.customer_id,
+                'customer_fname': OrderDetails_data.order_customer.customer_fname,
+                'customer_lname': OrderDetails_data.order_customer.customer_lname,
+                'customer_email': OrderDetails_data.order_customer.customer_email,
+                'customer_phone': OrderDetails_data.order_customer.customer_phone,
+
+                # Address Data
+                'order_address_id': OrderDetails_data.order_address_id.address_id,
+                'address_customer_fname': OrderDetails_data.order_address_id.address_customer_fname,
+                'address_line1': OrderDetails_data.order_address_id.address_line1,
+                'address_line2': OrderDetails_data.order_address_id.address_line2,
+                'address_landmark': OrderDetails_data.order_address_id.address_landmark,
+                'address_country': OrderDetails_data.order_address_id.address_country,
+                'address_city': OrderDetails_data.order_address_id.address_city,
+                'address_state': OrderDetails_data.order_address_id.address_state,
+                'address_zipcode': OrderDetails_data.order_address_id.address_zipcode,
+                'address_phone': OrderDetails_data.order_address_id.address_phone,
+
+                # product and orderdetail data
                 'orderDet_product': [{
                     "product_id": data.orderDet_product.product_id,
                     'product_name': data.orderDet_product.product_name,
@@ -1598,6 +1626,7 @@ def show_order_details_function(request):
                     'product_returnable': data.orderDet_product.product_returnable,
                     'product_active': data.orderDet_product.product_active,
                 } for data in OrderDetails_data.order_details.all()],
+                
             })
         return Response({
        
