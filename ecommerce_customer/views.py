@@ -14,7 +14,6 @@ from rest_framework.response import Response
 
 
 # Create your views here.
-
 def page_paginators(queryset, request, per_page=10):
     paginator = Paginator(queryset, per_page)
     page_number = request.GET.get('page')
@@ -29,17 +28,19 @@ def page_paginators(queryset, request, per_page=10):
 
 @api_view(['POST'])
 def customer_create_account_function(request):
-    customer_data = request.data
-    form = Customer_api(data = customer_data)
-    if form.is_valid():
-        form.save()
-        return Response({
-            'status':True,
-            'message': "Account has been created successfully" 
-        })
+    if request.method == 'POST': 
+        data = request.data
+        customer_fname = data['user_fname']
+        customer_lname = data['user_lname']
+        customer_phone = data['user_phone']
+        customer_email = data['user_email']
+        customer_password = data['user_password']
+
+        customer_data = Customer.objects.create(customer_fname=customer_fname, customer_lname=customer_lname, customer_phone=customer_phone, customer_email=customer_email, customer_password=customer_password)
+        customer_data.save()
     else:
         error_messages = []
-        for field, errors in form.errors.items():
+        for field, errors in customer_data.errors.items():
             for error in errors:
                 error_messages.append(f"{field}: {error}")
 
@@ -47,23 +48,36 @@ def customer_create_account_function(request):
             'status':False,
             'message': " ".join(error_messages)
         })
+    return Response({'message': 'Account has been created successfully!','status':True})
 
 @api_view(['POST'])
 def customer_login_function(request):
     if request.method == 'POST':
-        customer_email = request.POST['customer_email']
-        customer_password = request.POST['customer_password']
-        check_true = Customer.objects.filter(customer_email=customer_email, customer_password=customer_password).exists()
-        if check_true:
-            customer_data = Customer.objects.get(customer_email=customer_email, customer_password=customer_password)
-            request.session['customer_id'] = customer_data.customer_id
-            request.session['customer_fname'] = customer_data.customer_fname
+        data = request.data
+        customer_email = data.get('user_email')
+        customer_password = data.get('user_password')
+
+        # Check for user existence with the provided email and password
+        customer = Customer.objects.filter(customer_email=customer_email, customer_password=customer_password).first()
+        
+        if customer:
+            # Set session data
+            request.session['customer_id'] = customer.customer_id
+            request.session['customer_fname'] = customer.customer_fname
             request.session['customer_logged_in'] = 'yes'
-            return Response({'status': True, 'message': 'Login Successfully!'})
+
+            return Response({
+                'status': True,
+                'message': 'Login Successfully!',
+                'customer_id': customer.customer_id,         # Send customer ID back
+                'customer_fname': customer.customer_fname    # Send customer name back
+            })
         else:
-            messages.error(request, "Invalid email or password!")
             return Response({'status': False, 'message': 'Invalid Email or Password'})
+    
     return Response({'status': False, 'message': 'Please use POST method'})
+
+
 
 @api_view(['GET','PUT'])
 def customer_update_account_function(request):

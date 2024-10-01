@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render, HttpResponse, get_object_or_404
 from ecommerce_app.serializers import *
 from .models import *
 from .forms import *
-from django.db.models import Q, F, Sum, Max, Count, Avg
+from django.db.models import Q, F, Sum, Max, Count, Avg, OuterRef, Exists
 from django.db.models.functions import TruncDate, TruncMonth, TruncYear
 from django.core.paginator import Paginator
 from django.contrib import messages
@@ -1424,7 +1424,79 @@ def delete_offer_details_function(request):
 
 @api_view(['GET'])
 def show_order_function(request):
-    order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').all()
+
+
+    if request.GET.get('Pending'):
+        pending_order_details = OrderDetails.objects.filter(
+        orderDet_order=OuterRef('order_id'),  # Reference to the current Order's ID
+        orderDet_status=OrderDetails.OrderDetStatus.PENDING  # Filter for pending status
+        )
+        order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').annotate(
+            has_thiss=Exists(pending_order_details)  # Annotate with a boolean indicating if there are pending order details
+        ).filter(has_thiss=True) 
+     
+
+    elif request.GET.get('Accepted'):
+        pending_order_details = OrderDetails.objects.filter(
+        orderDet_order=OuterRef('order_id'),  # Reference to the current Order's ID
+        orderDet_status=OrderDetails.OrderDetStatus.ACCEPTED  # Filter for pending status
+        )
+        order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').annotate(
+            has_thiss=Exists(pending_order_details)  # Annotate with a boolean indicating if there are pending order details
+        ).filter(has_thiss=True) 
+     
+
+    elif request.GET.get('Rejected'):
+        pending_order_details = OrderDetails.objects.filter(
+        orderDet_order=OuterRef('order_id'),  # Reference to the current Order's ID
+        orderDet_status=OrderDetails.OrderDetStatus.REJECTED  # Filter for pending status
+        )
+        order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').annotate(
+            has_thiss=Exists(pending_order_details)  # Annotate with a boolean indicating if there are pending order details
+        ).filter(has_thiss=True) 
+     
+
+    elif request.GET.get('OutForDelivery'):
+        pending_order_details = OrderDetails.objects.filter(
+        orderDet_order=OuterRef('order_id'),  # Reference to the current Order's ID
+        orderDet_status=OrderDetails.OrderDetStatus.OutForDelivery  # Filter for pending status
+        )
+        order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').annotate(
+            has_thiss=Exists(pending_order_details)  # Annotate with a boolean indicating if there are pending order details
+        ).filter(has_thiss=True) 
+     
+
+    elif request.GET.get('Delivered'):
+        pending_order_details = OrderDetails.objects.filter(
+        orderDet_order=OuterRef('order_id'),  # Reference to the current Order's ID
+        orderDet_status=OrderDetails.OrderDetStatus.DELIVERED  # Filter for pending status
+        )
+        order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').annotate(
+            has_thiss=Exists(pending_order_details)  # Annotate with a boolean indicating if there are pending order details
+        ).filter(has_thiss=True) 
+     
+
+    elif request.GET.get('Returned'):
+        pending_order_details = OrderDetails.objects.filter(
+        orderDet_order=OuterRef('order_id'),  # Reference to the current Order's ID
+        orderDet_status=OrderDetails.OrderDetStatus.RETURNED  # Filter for pending status
+        )
+        order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').annotate(
+            has_thiss=Exists(pending_order_details)  # Annotate with a boolean indicating if there are pending order details
+        ).filter(has_thiss=True) 
+     
+
+    elif request.GET.get('Cancelled'):
+        pending_order_details = OrderDetails.objects.filter(
+        orderDet_order=OuterRef('order_id'),  # Reference to the current Order's ID
+        orderDet_status=OrderDetails.OrderDetStatus.CANCELLED  # Filter for pending status
+        )
+        order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').annotate(
+            has_thiss=Exists(pending_order_details)  # Annotate with a boolean indicating if there are pending order details
+        ).filter(has_thiss=True) 
+     
+    else:
+        order_data = Order.objects.prefetch_related('order_address_id', 'order_customer', 'order_details').all()
     
     query = request.GET.get('searchhere', '')
     if query:
@@ -1560,6 +1632,8 @@ def change_order_status_function(request):
                 order_data.orderDet_status = OrderDetails.OrderDetStatus.OutForDelivery
             elif orderDet_status == 'DELIVERED':
                 order_data.orderDet_status = OrderDetails.OrderDetStatus.DELIVERED
+            elif orderDet_status == 'Rejected':
+                order_data.orderDet_status = OrderDetails.OrderDetStatus.REJECTED
             elif orderDet_status == 'RETURNED':
                 order_data.orderDet_status = OrderDetails.OrderDetStatus.RETURNED
             else:

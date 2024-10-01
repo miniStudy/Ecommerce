@@ -322,19 +322,19 @@ class Order(models.Model):
 
 class OrderDetails(models.Model):
     class OrderDetStatus(models.TextChoices):
-        PENDING = 'P', 'Pending'
-        ACCEPTED = 'A', 'Accepted'
-        REJECTED = 'R', 'Rejected'
-        OutForDelivery = 'O', 'OutForDelivery'
-        DELIVERED = 'D', 'Delivered'
-        RETURNED = 'RET', 'RETURNED'
-        CANCELLED = 'C', 'Cancelled'
+        PENDING = 'Pending', 'Pending'
+        ACCEPTED = 'Accepted', 'Accepted'
+        REJECTED = 'Rejected', 'Rejected'
+        OutForDelivery = 'OutForDelivery', 'OutForDelivery'
+        DELIVERED = 'Delivered', 'Delivered'
+        RETURNED = 'Returned', 'Returned'
+        CANCELLED = 'Cancelled', 'Cancelled'
     orderDet_id = models.BigAutoField(primary_key=True)
     orderDet_product = models.ForeignKey(Product, on_delete=models.CASCADE)
     orderDet_price = models.FloatField()
     orderDet_quantity = models.IntegerField()
     orderDet_size_id = models.ForeignKey(Size, on_delete=models.CASCADE)
-    orderDet_status = models.CharField(max_length=3,choices=OrderDetStatus.choices,default=OrderDetStatus.PENDING)
+    orderDet_status = models.CharField(max_length=15,choices=OrderDetStatus.choices,default=OrderDetStatus.PENDING)
     orderDet_customer = models.ForeignKey(Customer, on_delete=models.CASCADE,blank=True,null=True)
     orderDet_order = models.ForeignKey(Order, on_delete=models.CASCADE,blank=True,null=True, related_name='order_details')
     orderDet_color = models.ForeignKey(Color, on_delete=models.CASCADE)
