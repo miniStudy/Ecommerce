@@ -26,70 +26,6 @@ def page_paginators(queryset, request, per_page=10):
         'data': list(page_obj),
     }
 
-@api_view(['POST'])
-def db_create_account_function(request):
-    db_data = request.data
-    form = delivery_boy_api(data = db_data)
-    if form.is_valid():
-        form.save()
-        return Response({'status':True, 'message':'account has been created successfully'})
-    else:
-        error_messages = []
-        for field, errors in form.errors.items():
-            for error in errors:
-                error_messages.append(f"{field}: {error}")
-
-        return Response({
-            'status':False,
-            'message': " ".join(error_messages)
-        })
-
-@api_view(['GET']) 
-def db_show_function(request):
-    db_data = delivery_boy.objects.all().values('db_id', 'db_name', 'db_email', 'db_phone', 'db_address')
-
-    query = request.GET.get('searchhere', '')
-    if query:
-        db_data = db_data.filter(
-            Q(db_name__icontains=query) |
-            Q(db_email__icontains=query) |
-            Q(db_address__icontains=query))
-        
-    paginator = Paginator(db_data, 10)
-    page_number = request.GET.get('page',1)
-    page_obj = paginator.get_page(page_number)
-    db_show_list = []
-    for db in page_obj:
-        db_show_list.append({
-            'db_id': db['db_id'],
-            'db_name': db['db_name'],
-            'db_email': db['db_email'],
-            'db_phone': db['db_phone'],
-            'db_address': db['db_address'],
-        })
-    context = {'data':db_show_list}  
-    return Response(context)
-
-@api_view(['DELETE'])
-def db_delete_function(request):
-    if request.GET.get('pk'):
-        try:
-            db_delete = get_object_or_404(delivery_boy, pk=request.GET['pk'])
-            db_delete.delete()
-            return Response({
-                "status": True,
-                "message": "Delevery Boy has been deleted successfully"
-            })
-        except Exception as e:
-            return Response({
-                "status": False,
-                "message": str(e)
-            }) 
-    else:
-        return Response({
-            'status': False,
-            'message': 'Give pk for Delete'
-        })
 
 @api_view(['GET','POST'])
 def db_login_function(request):
@@ -108,38 +44,6 @@ def db_login_function(request):
             return Response({'status': False, 'message': 'Invalid Email or Password'})
         
     return Response({'status': False, 'message': 'Use POST method'})
-
-@api_view(['GET', 'POST'])
-def db_update_account_function(request):
-    if request.method == 'POST':
-        if request.GET.get('pk'):
-            instance = get_object_or_404(delivery_boy, pk=request.GET['pk'])
-            db_data = request.data
-            form = delivery_boy_api(data = db_data, instance=instance, partial = True)
-            if form.is_valid():
-                form.save()
-                return Response({
-                    "status":True,
-                    "message":"Your account has been updated"
-                })
-            else:
-                error_messages = []
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        error_messages.append(f"{field}: {error}")
-
-                return Response({
-                    'status':False,
-                    'message': " ".join(error_messages)
-                })
-        else:
-            return Response({'status':False, 'message':'pk is required'})
-    else:
-        if request.GET.get('pk'):
-            instance = get_object_or_404(delivery_boy, pk=request.GET['pk'])
-            serializer = delivery_boy_api(instance)
-            return Response({'instance':serializer.data})
-        return Response({'status':False, 'message':'pk is required'})
 
 
 @api_view(['POST'])    

@@ -9,6 +9,7 @@ urlpatterns = [
     path('admin_show_account/', views.admin_show_account_function, name='admin_show_account'),
     path('admin_update_account/', views.admin_update_account_function, name='admin_update_account'),
     path('admin_delete_account/', views.admin_delete_account_function, name='admin_delete_account'),
+    path('show_admin_profile/', views.show_admin_profile_function, name='show_admin_profile'),
 
 
     #============================= Customer =======================================================================
@@ -125,4 +126,13 @@ urlpatterns = [
     #============================= Stock Management ==============================================================
     path('show_stock_management_details/', views.show_stock_management_details_function, name='show_stock_management_details'),
     path('delete_stock_management_details/', views.delete_stock_management_details_function, name='delete_stock_management_details'),
+
+
+    #=============================== Delivery Boy =================================================================
+    path('show_delivery_boy/', views.show_delivery_boy_function, name='show_delivery_boy'),
+    path('insert_delivery_boy/', views.insert_delivery_boy_function, name='insert_delivery_boy'),
+    path('update_delivery_boy/', views.update_delivery_boy_function, name='update_delivery_boy'),
+    path('delete_delivery_boy/', views.delete_delivery_boy_function, name='delete_delivery_boy'),
+
+
 ]
