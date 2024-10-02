@@ -378,7 +378,7 @@ class assign_orders(models.Model):
 
     assign_id = models.BigAutoField(primary_key=True)
     assign_db_id = models.ForeignKey(delivery_boy, on_delete=models.CASCADE)
-    assign_orderDet_id = models.ForeignKey(OrderDetails, on_delete=models.CASCADE)
+    assign_orderDet_id = models.ForeignKey(OrderDetails, on_delete=models.CASCADE, related_name="assign_order")
     assign_order_todo = models.CharField(max_length=15,choices=OrderWork.choices,default=OrderWork.For_Delivery)
     assign_date = models.DateField(null=True, blank=True, auto_now_add=True)
 
